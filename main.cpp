@@ -6,7 +6,7 @@
     #include "linkedlist.cpp"
     #include "outerlist.cpp"
 
-    void algorithmLRU(LinkedList& numberList, LinkedList& innerList, OuterList& outerList, LinkedList& blankList, int numFrames);
+    int algorithmLRU(LinkedList& numberList, LinkedList& innerList, OuterList& outerList, LinkedList& blankList, int numFrames);
 
     int main() { 
         //Open a file
@@ -65,6 +65,7 @@
             innerList.insert(-1);
         }
 
+        int frameFaults = 0; //Variable to store the number of page faults
         switch (algorithm) {
             case 'F': {
                 std::cout << "Using FIFO Page Replacement Algorithm" << std::endl;
@@ -72,7 +73,8 @@
             }
             case 'L': {
                 std::cout << "Using LRU Page Replacement Algorithm" << std::endl;
-                algorithmLRU(numberList, innerList, outerList, blankList, numFrames);
+                frameFaults = algorithmLRU(numberList, innerList, outerList, blankList, numFrames);
+                std::cout << "Total Page Faults: " << frameFaults << std::endl;
                 break;
             }
 
@@ -88,7 +90,8 @@
         };
 
 
- void algorithmLRU(LinkedList& numberList, LinkedList& innerList, OuterList& outerList, LinkedList& blankList, int numFrames) {
+ int algorithmLRU(LinkedList& numberList, LinkedList& innerList, OuterList& outerList, LinkedList& blankList, int numFrames) {
+    int frameFaults = 0; //Count of page faults
     //Iterate through the numbers in the number list and simulate the LRU algorithm
     for(int i = 0; i < numberList.size(); i++) {
         int currentNumber = numberList.get(i);
@@ -104,6 +107,7 @@
                 innerList.replaceLRU(currentNumber); //Uses the age to determine LRU
 
             }
+            frameFaults++; //Increment page fault count
         }
         else { //If the current number is already in the frames, reset its age and skip iteration
 
@@ -121,5 +125,6 @@
 
     outerList.reverse(); //Reverse the outer list to maintain original order
     outerList.display(numFrames); 
+    return frameFaults;
  }
     
