@@ -186,6 +186,22 @@ class LinkedList {
             oldestNode->data = value;
             oldestNode->age = 0; // Reset age after replacement
         }
+        void replaceAtIndex(int index, int value) {
+            // Replace the page number stored at a specific frame index
+            Node* current = head;
+            int count = 0;
+
+            while (current) {                 // Walk node-by-node
+                if (count == index) {         // Found the frame we want to replace
+                    current->data = value;    // Replace page number
+                    current->age = 0;         // Reset age (safe even if OPT does not use age)
+                    return;
+                }
+                current = current->next;      // Move forward
+                count++;
+            }
+     
+        }
 
         void reverse() {
             """ Reverse the linked list in place """;

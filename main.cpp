@@ -7,10 +7,14 @@
     #include "outerlist.cpp"
 
     int algorithmLRU(LinkedList& numberList, LinkedList& innerList, OuterList& outerList, LinkedList& blankList, int numFrames);
+    int algorithmOPT(LinkedList& numberList, LinkedList& innerList, OuterList& outerList, LinkedList& blankList, int numFrames);
 
     int main() { 
         //Open a file
-        std::fstream File("LRU.txt", std::ios::in);
+        std::string FileName = "";
+        std::cout << "Enter the file name ";
+        std::cin >> FileName;
+        std::fstream File(FileName, std::ios::in);
         
         
         //If the file fails to open, print an error and exit
@@ -80,6 +84,8 @@
 
             case 'O': {
                 std::cout << "Using Optimal Page Replacement Algorithm" << std::endl;
+                frameFaults = algorithmOPT(numberList, innerList, outerList, blankList, numFrames);
+                std::cout << "Total Page Faults: " << frameFaults << std::endl;
                 break;
             }
 
@@ -127,4 +133,78 @@
     outerList.display(numFrames); 
     return frameFaults;
  }
+
+
+ int algorithmOPT(LinkedList& numberList, LinkedList& innerList, OuterList& outerList, LinkedList& blankList, int numFrames) {
+
+     int frameFaults = 0; // Total OPT faults
+
+     // Go through each page reference in order
+     for (int currentIndex = 0; currentIndex < numberList.size(); currentIndex++) {
+
+         int currentPage = numberList.get(currentIndex); // Page being referenced now
+
+         // HIT: page already in frames -> no fault
+         if (innerList.contains(currentPage)) {
+             // blank
+             outerList.insert(blankList, currentPage);
+             continue;
+         }
+
+         // MISS: page not in frames -> fault
+         frameFaults++;
+
+         // If we have an empty frame, use it
+         if (innerList.search(-1) != -1) {
+             innerList.insertInEmptyFrame(currentPage);
+         }
+         // Otherwise, choose a victim using OPT
+         else {
+             int victimIndex = 0;      // Frame index to replace
+             int farthestNextUse = -1; // The largest "next use" position so far
+
+             // Check each frame�s page
+             for (int frameIndex = 0; frameIndex < numFrames; frameIndex++) {
+
+                 int pageInFrame = innerList.get(frameIndex);
+                 int nextUseIndex = -1; // -1 means "never used again"
+
+                 // Look ahead to find this page�s next use
+                 for (int futureIndex = currentIndex + 1; futureIndex < numberList.size(); futureIndex++) {
+                     if (numberList.get(futureIndex) == pageInFrame) {
+                         nextUseIndex = futureIndex;
+                         break;
+                     }
+                 }
+
+                 // Best possible victim: never used again
+                 if (nextUseIndex == -1) {
+                     victimIndex = frameIndex;
+                     farthestNextUse = 2147483647; // Treat as �infinite future�
+                     break;
+                 }
+
+                 // Otherwise, pick the one used farthest in the future
+                 if (nextUseIndex > farthestNextUse) {
+                     farthestNextUse = nextUseIndex;
+                     victimIndex = frameIndex;
+                 }
+             }
+
+             // Replace the victim frame with the current page
+             innerList.replaceAtIndex(victimIndex, currentPage);
+         }
+
+         // Record a snapshot AFTER the fault is handled (so the table shows the new frames)
+         LinkedList tempList = innerList;
+         outerList.insert(tempList, currentPage);
+     }
+
+     // Print oldest-to-newest in correct order (same pattern as your LRU code)
+     outerList.reverse();
+     outerList.display(numFrames);
+
+     return frameFaults;
+ }
+
     
